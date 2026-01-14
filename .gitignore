@@ -1,0 +1,62 @@
+# ============================================
+# .gitignore per Hyperledger Fabric Project
+# ============================================
+
+# Certificati e chiavi (SENSIBILI!)
+network/organizations/ordererOrganizations/
+network/organizations/peerOrganizations/
+*.pem
+*.key
+*.crt
+
+# Artifacts generati
+network/channel-artifacts/
+*.block
+*.tx
+
+# Chaincode
+chaincode/**/vendor/
+chaincode/**/*.tar.gz
+chaincode/**/go.sum
+
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log
+application/wallet/
+
+# Go
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.env
+docker-compose.override.yml
+
+# Backup
+*.bak
+*.backup
+
+# Temporary
+tmp/
+temp/
+*.tmp
