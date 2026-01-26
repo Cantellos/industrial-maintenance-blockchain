@@ -1,0 +1,16 @@
+[
+  {
+    "date": "2025-01-10T10:00:00Z",
+    "type": "ordinaria",
+    "description": "Cambio olio lubrificante",
+    "technician": "Mario Rossi",
+    "approvedBy": "OwnerMSP"
+  },
+  {
+    "date": "2024-12-15T14:30:00Z",
+    "type": "straordinaria",
+    "description": "Riparazione sistema elettrico",
+    "technician": "Luigi Verdi",
+    "approvedBy": "OwnerMSP"
+  }
+]

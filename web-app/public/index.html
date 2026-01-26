@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Gestione Manutenzione Macchine Industriali</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema Gestione Manutenzione</h1>
+            <p class="subtitle">Registro Blockchain Macchine Industriali</p>
+        </header>
+
+        <!-- TABS per navigazione -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('view')">Visualizza Macchine</button>
+            <button class="tab-button" onclick="showTab('register')">Registra Nuova Macchina</button>
+        </div>
+
+        <!-- TAB 1: VISUALIZZAZIONE MACCHINE -->
+        <div id="viewTab" class="tab-content active">
+            <div class="controls">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cerca macchina per ID (es. MACH001)">
+                    <button onclick="searchMachine()">Cerca</button>
+                    <button onclick="loadAllMachines()">Mostra Tutte</button>
+                </div>
+
+                <div class="filter-box">
+                    <label>Filtra interventi:</label>
+                    <select id="filterType" onchange="applyFilter()">
+                        <option value="all">Tutti gli interventi</option>
+                        <option value="ordinaria">Solo manutenzione ordinaria</option>
+                        <option value="straordinaria">Solo manutenzione straordinaria</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                Caricamento dati dalla blockchain...
+            </div>
+
+            <div id="error" class="error" style="display: none;"></div>
+
+            <div id="machinesContainer"></div>
+        </div>
+
+        <!-- TAB 2: REGISTRAZIONE NUOVA MACCHINA -->
+        <div id="registerTab" class="tab-content">
+            <div class="register-card">
+                <h2>Registrazione Nuova Macchina</h2>
+                <p class="form-description">Inserisci i dati della nuova macchina da registrare sulla blockchain</p>
+                
+                <form id="registerForm">
+                    <div class="form-grid">
+                        <!-- Campi obbligatori -->
+                        <div class="form-group">
+                            <label for="machineId">ID Macchina *</label>
+                            <input type="text" id="machineId" required 
+                                   placeholder="es. MACH003" 
+                                   pattern="[A-Z0-9]+"
+                                   title="Solo lettere maiuscole e numeri">
+                            <small>Solo lettere maiuscole e numeri</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="machineName">Nome Macchina *</label>
+                            <input type="text" id="machineName" required 
+                                   placeholder="es. Pressa Idraulica">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="machineModel">Modello *</label>
+                            <input type="text" id="machineModel" required 
+                                   placeholder="es. Schuler 1000T">
+                        </div>
+
+                        <!-- Campi opzionali -->
+                        <div class="form-group">
+                            <label for="operatingHours">Ore Operative</label>
+                            <input type="number" id="operatingHours" 
+                                   placeholder="0" min="0" value="0">
+                            <small>Ore di lavoro già accumulate</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="machineStatus">Stato Macchina</label>
+                            <select id="machineStatus">
+                                <option value="funzionante">Funzionante</option>
+                                <option value="guasto">Guasto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sezione opzionale interventi pregressi -->
+                    <div class="form-section">
+                        <h3>Interventi Pregressi (Opzionale)</h3>
+                        <p class="section-description">Aggiungi eventuali interventi di manutenzione già effettuati</p>
+                        
+                        <div id="interventionsContainer"></div>
+                        
+                        <button type="button" class="btn-secondary" onclick="addInterventionField()">
+                            + Aggiungi Intervento
+                        </button>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Registra Macchina</button>
+                        <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
+                    </div>
+                </form>
+
+                <div id="registerLoading" class="loading" style="display: none;">
+                    Registrazione in corso sulla blockchain...
+                </div>
+
+                <div id="registerError" class="error" style="display: none;"></div>
+                <div id="registerSuccess" class="success" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

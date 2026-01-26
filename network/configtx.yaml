@@ -1,0 +1,172 @@
+# ========================================
+# CONFIGURAZIONE ORGANIZZAZIONI
+# ========================================
+Organizations:
+  - &OrdererOrg
+      Name: OrdererMSP
+      ID: OrdererMSP
+      MSPDir: ./organizations/ordererOrganizations/example.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+        Writers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+        Admins:
+          Type: Signature
+          Rule: "OR('OrdererMSP.admin')"
+      OrdererEndpoints:
+        - orderer.example.com:7050
+
+  - &OwnerOrg
+      Name: OwnerMSP
+      ID: OwnerMSP
+      MSPDir: ./organizations/peerOrganizations/owner.example.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('OwnerMSP.admin', 'OwnerMSP.peer', 'OwnerMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('OwnerMSP.admin', 'OwnerMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('OwnerMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('OwnerMSP.peer')"
+
+  - &ServiceOrg
+      Name: ServiceMSP
+      ID: ServiceMSP
+      MSPDir: ./organizations/peerOrganizations/service.example.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('ServiceMSP.admin', 'ServiceMSP.peer', 'ServiceMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('ServiceMSP.admin', 'ServiceMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('ServiceMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('ServiceMSP.peer')"
+
+# ========================================
+# CAPABILITIES (Fabric 2.4)
+# ========================================
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+# ========================================
+# CONFIGURAZIONE ORDERER
+# ========================================
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.example.com:7050
+  
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.example.com
+        Port: 7050
+        ClientTLSCert: ./organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+        ServerTLSCert: ./organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+
+  Organizations:
+
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+  Capabilities:
+    <<: *OrdererCapabilities
+
+# ========================================
+# CONFIGURAZIONE APPLICAZIONE
+# ========================================
+Application: &ApplicationDefaults
+  Organizations:
+  
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+# ========================================
+# CONFIGURAZIONE CANALE
+# ========================================
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+
+  Capabilities:
+    <<: *ChannelCapabilities
+
+# ========================================
+# PROFILI
+# ========================================
+Profiles:
+  # Profilo Canale con Orderer (per Channel Participation API)
+  MaintenanceChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *OwnerOrg
+        - *ServiceOrg
+      Capabilities:
+        <<: *ApplicationCapabilities

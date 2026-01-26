@@ -1,0 +1,40 @@
+# ========================================
+# CERTIFICATI ORDERER ORGANIZATION
+# ========================================
+OrdererOrgs:
+  - Name: Orderer
+    Domain: example.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+        SANS:
+          - localhost
+          - 127.0.0.1
+
+# ========================================
+# CERTIFICATI PEER ORGANIZATIONS
+# ========================================
+PeerOrgs:
+  # Organizzazione Proprietario Macchine
+  - Name: Owner
+    Domain: owner.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+    Users:
+      Count: 1
+
+  # Organizzazione Manutenzione
+  - Name: Service
+    Domain: service.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+    Users:
+      Count: 1

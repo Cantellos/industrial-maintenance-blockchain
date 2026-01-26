@@ -1,0 +1,90 @@
+{
+  "name": "maintenance-network",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Owner",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "organizations": {
+    "Owner": {
+      "mspid": "OwnerMSP",
+      "peers": [
+        "peer0.owner.example.com"
+      ],
+      "certificateAuthorities": [
+        "ca.owner.example.com"
+      ]
+    },
+    "Service": {
+      "mspid": "ServiceMSP",
+      "peers": [
+        "peer0.service.example.com"
+      ],
+      "certificateAuthorities": [
+        "ca.service.example.com"
+      ]
+    }
+  },
+  "orderers": {
+    "orderer.example.com": {
+      "url": "grpcs://localhost:7050",
+      "tlsCACerts": {
+        "path": "/home/cantellos/fabric-projects/fabric-maintenance-network/network/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer.example.com",
+        "hostnameOverride": "orderer.example.com"
+      }
+    }
+  },
+  "peers": {
+    "peer0.owner.example.com": {
+      "url": "grpcs://localhost:7051",
+      "tlsCACerts": {
+        "path": "/home/cantellos/fabric-projects/fabric-maintenance-network/network/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.owner.example.com",
+        "hostnameOverride": "peer0.owner.example.com"
+      }
+    },
+    "peer0.service.example.com": {
+      "url": "grpcs://localhost:9051",
+      "tlsCACerts": {
+        "path": "/home/cantellos/fabric-projects/fabric-maintenance-network/network/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.service.example.com",
+        "hostnameOverride": "peer0.service.example.com"
+      }
+    }
+  },
+  "channels": {
+    "maintenancech": {
+      "orderers": [
+        "orderer.example.com"
+      ],
+      "peers": {
+        "peer0.owner.example.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer0.service.example.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    }
+  }
+}
