@@ -1,5 +1,11 @@
 # Fabric Maintenance Network
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hyperledger Fabric](https://img.shields.io/badge/Hyperledger%20Fabric-2.5.14-blue)](https://github.com/hyperledger/fabric)
+[![Go Version](https://img.shields.io/badge/Go-1.21.0-00ADD8)](https://golang.org/)
+[![Node.js Version](https://img.shields.io/badge/Node.js-24.13.0-green)](https://nodejs.org/)
+[![CI Status](https://github.com/Cantellos/fabric-maintenance-network/workflows/CI/badge.svg)](https://github.com/Cantellos/fabric-maintenance-network/actions)
+
 A Hyperledger Fabric blockchain network for managing industrial machinery maintenance in Industry 4.0 contexts. The system provides transparent maintenance workflows, immutable audit trails, and multi-organizational coordination between machine owners and maintenance service providers.
 
 ## Overview
