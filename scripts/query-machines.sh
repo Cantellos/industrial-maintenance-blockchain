@@ -1,4 +1,4 @@
-#!/bin/bash
+    #!/bin/bash
 
 # ============================================
 # QUERY MACHINES - Visualizzazione stato macchine e interventi
@@ -113,7 +113,6 @@ print_machine() {
             local TYPE=$(echo "$intervention" | jq -r '.type')
             local DESC=$(echo "$intervention" | jq -r '.description')
             local TECH=$(echo "$intervention" | jq -r '.technician')
-            local APPROVED=$(echo "$intervention" | jq -r '.approvedBy')
             
             echo -e "${YELLOW}[$INDEX]${NC}"
             echo "  Data:        $DATE"
@@ -127,7 +126,6 @@ print_machine() {
             
             echo "  Descrizione: $DESC"
             echo "  Tecnico:     $TECH"
-            echo "  Approvato:   $APPROVED"
             echo ""
             
             INDEX=$((INDEX + 1))

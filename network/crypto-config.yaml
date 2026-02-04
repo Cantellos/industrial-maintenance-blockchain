@@ -27,9 +27,21 @@ PeerOrgs:
     Users:
       Count: 1
 
-  # Organizzazione Manutenzione
-  - Name: Service
-    Domain: service.example.com
+  # Organizzazione Manutenzione Ordinaria
+  - Name: Ordinary
+    Domain: ordinary.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+      SANS:
+        - localhost
+        - 127.0.0.1
+    Users:
+      Count: 1
+
+  # Organizzazione Manutenzione Straordinaria
+  - Name: Extraordinary
+    Domain: extraordinary.example.com
     EnableNodeOUs: true
     Template:
       Count: 1

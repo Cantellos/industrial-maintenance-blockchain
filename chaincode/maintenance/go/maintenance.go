@@ -27,7 +27,7 @@ type Intervention struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
 	Technician  string `json:"technician"`
-	ApprovedBy  string `json:"approvedBy"`
+	MachineID   string `json:"machineId"`
 }
 
 type Alert struct {
@@ -40,14 +40,6 @@ type Alert struct {
 }
 
 type SmartContract struct{}
-
-func (s *SmartContract) getMSPID(stub shim.ChaincodeStubInterface) (string, error) {
-	mspID, err := shim.GetMSPID()
-	if err != nil {
-		return "", fmt.Errorf("impossibile recuperare MSP ID: %v", err)
-	}
-	return mspID, nil
-}
 
 // Estrae l'MSP ID dal creator usando protobuf
 func getCreatorMSPID(creatorBytes []byte) (string, error) {
@@ -87,7 +79,7 @@ func (s *SmartContract) InitLedger(stub shim.ChaincodeStubInterface) peer.Respon
 					Type:        "ordinaria",
 					Description: "Cambio olio lubrificante",
 					Technician:  "Mario Rossi",
-					ApprovedBy:  "OwnerMSP",
+					MachineID:   "MACH001",
 				},
 			},
 		},
@@ -106,7 +98,7 @@ func (s *SmartContract) InitLedger(stub shim.ChaincodeStubInterface) peer.Respon
 					Type:        "ordinaria",
 					Description: "Verifica parametri elettrici",
 					Technician:  "Luigi Verdi",
-					ApprovedBy:  "OwnerMSP",
+					MachineID:   "MACH002",
 				},
 			},
 		},
@@ -131,6 +123,7 @@ func (s *SmartContract) RegisterMachine(stub shim.ChaincodeStubInterface, args [
 		return shim.Error("Numero argomenti errato. Uso: RegisterMachine <id> <name> <model> [operatingHours] [status] [interventionsJSON]")
 	}
 
+	// CONTROLLO ACCESSO: SOLO OwnerMSP puo' registrare una nuova macchina
 	creatorBytes, err := stub.GetCreator()
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Impossibile recuperare creator: %v", err))
@@ -142,7 +135,7 @@ func (s *SmartContract) RegisterMachine(stub shim.ChaincodeStubInterface, args [
 	}
 
 	if creatorMSPID != "OwnerMSP" {
-		return shim.Error(fmt.Sprintf("Accesso negato: solo OwnerMSP può registrare macchine (chiamante: %s)", creatorMSPID))
+		return shim.Error(fmt.Sprintf("Accesso negato: solo OwnerMSP puo' modificare stato (chiamante: %s)", creatorMSPID))
 	}
 
 	id := args[0]
@@ -154,7 +147,7 @@ func (s *SmartContract) RegisterMachine(stub shim.ChaincodeStubInterface, args [
 		return shim.Error(fmt.Sprintf("Errore controllo esistenza: %v", err))
 	}
 	if existingMachineJSON != nil {
-		return shim.Error(fmt.Sprintf("Macchina %s già esistente", id))
+		return shim.Error(fmt.Sprintf("Macchina %s gia' esistente", id))
 	}
 
 	// Parametri opzionali
@@ -220,6 +213,21 @@ func (s *SmartContract) UpdateOperatingHours(stub shim.ChaincodeStubInterface, a
 		return shim.Error("Le ore devono essere un numero intero")
 	}
 
+	// CONTROLLO ACCESSO: SOLO OwnerMSP puo' aggiornare ore di lavoro
+	creatorBytes, err := stub.GetCreator()
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile recuperare creator: %v", err))
+	}
+
+	creatorMSPID, err := getCreatorMSPID(creatorBytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile estrarre MSP ID: %v", err))
+	}
+
+	if creatorMSPID != "OwnerMSP" {
+		return shim.Error(fmt.Sprintf("Accesso negato: solo OwnerMSP puo' modificare stato (chiamante: %s)", creatorMSPID))
+	}
+
 	machineJSON, err := stub.GetState(id)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Errore recupero macchina: %v", err))
@@ -257,33 +265,6 @@ func (s *SmartContract) UpdateOperatingHours(stub shim.ChaincodeStubInterface, a
 	return shim.Success([]byte(fmt.Sprintf("Macchina %s aggiornata: +%d ore (totale: %d)%s", id, hours, machine.OperatingHours, alertMessage)))
 }
 
-func (s *SmartContract) CheckMachineStatus(stub shim.ChaincodeStubInterface, args []string) peer.Response {
-	if len(args) != 1 {
-		return shim.Error("Numero argomenti errato. Uso: CheckMachineStatus <id>")
-	}
-
-	id := args[0]
-
-	machineJSON, err := stub.GetState(id)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Errore recupero macchina: %v", err))
-	}
-	if machineJSON == nil {
-		return shim.Error(fmt.Sprintf("Macchina %s non trovata", id))
-	}
-
-	var machine Machine
-	err = json.Unmarshal(machineJSON, &machine)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	statusMessage := fmt.Sprintf("Macchina %s - Stato: %s, Ore: %d, Ultima modifica: %s",
-		machine.Name, machine.Status, machine.OperatingHours, machine.LastUpdate)
-
-	return shim.Success([]byte(statusMessage))
-}
-
 func (s *SmartContract) SetMachineStatus(stub shim.ChaincodeStubInterface, args []string) peer.Response {
 	if len(args) != 2 {
 		return shim.Error("Numero argomenti errato. Uso: SetMachineStatus <id> <status>")
@@ -294,6 +275,21 @@ func (s *SmartContract) SetMachineStatus(stub shim.ChaincodeStubInterface, args 
 
 	if status != "funzionante" && status != "guasto" {
 		return shim.Error("Status deve essere 'funzionante' o 'guasto'")
+	}
+
+	// CONTROLLO ACCESSO: SOLO OwnerMSP puo' cambiare lo stato
+	creatorBytes, err := stub.GetCreator()
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile recuperare creator: %v", err))
+	}
+
+	creatorMSPID, err := getCreatorMSPID(creatorBytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile estrarre MSP ID: %v", err))
+	}
+
+	if creatorMSPID != "OwnerMSP" {
+		return shim.Error(fmt.Sprintf("Accesso negato: solo OwnerMSP puo' modificare stato (chiamante: %s)", creatorMSPID))
 	}
 
 	machineJSON, err := stub.GetState(id)
@@ -389,6 +385,29 @@ func (s *SmartContract) AddIntervention(stub shim.ChaincodeStubInterface, args [
 		return shim.Error("Type deve essere 'ordinaria' o 'straordinaria'")
 	}
 
+	// CONTROLLO ACCESSO: SOLO OrdinaryMSP OR ExtraordinaryMSP possono inserire un intervento + controllo in base al tipo di intervento
+	creatorBytes, err := stub.GetCreator()
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile recuperare creator: %v", err))
+	}
+
+	creatorMSPID, err := getCreatorMSPID(creatorBytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile estrarre MSP ID: %v", err))
+	}
+
+	if creatorMSPID == "OwnerMSP" {
+		return shim.Error("Accesso negato: OwnerMSP non puo' inserire una manutenzione, altrimenti potrebbe validarla unilateralmente")
+	}
+
+	if interventionType == "ordinaria" && creatorMSPID != "OrdinaryMSP" {
+		return shim.Error(fmt.Sprintf("Accesso negato: solo OrdinaryMSP puo' inserire una manutenzione ordinaria (chiamante: %s)", creatorMSPID))
+	}
+
+	if interventionType == "straordinaria" && creatorMSPID != "ExtraordinaryMSP" {
+		return shim.Error(fmt.Sprintf("Accesso negato: solo ExtraordinaryMSP puo' inserire una manutenzione straordinaria (chiamante: %s)", creatorMSPID))
+	}
+
 	machineJSON, err := stub.GetState(id)
 	if err != nil {
 		return shim.Error(fmt.Sprintf("Errore recupero macchina: %v", err))
@@ -403,23 +422,12 @@ func (s *SmartContract) AddIntervention(stub shim.ChaincodeStubInterface, args [
 		return shim.Error(err.Error())
 	}
 
-	// Usa Creator MSP ID (deterministico su tutti i peer)
-	creatorBytes, err := stub.GetCreator()
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Impossibile recuperare creator: %v", err))
-	}
-
-	creatorMSPID, err := getCreatorMSPID(creatorBytes)
-	if err != nil {
-		return shim.Error(fmt.Sprintf("Impossibile estrarre MSP ID: %v", err))
-	}
-
 	intervention := Intervention{
 		Date:        time.Now().Format(time.RFC3339),
 		Type:        interventionType,
 		Description: description,
 		Technician:  technician,
-		ApprovedBy:  creatorMSPID,
+		MachineID:   id,
 	}
 
 	machine.Interventions = append(machine.Interventions, intervention)
@@ -451,6 +459,21 @@ func (s *SmartContract) CreateAlert(stub shim.ChaincodeStubInterface, args []str
 	machineName := args[1]
 	alertType := args[2]
 	message := args[3]
+
+	// CONTROLLO ACCESSO: SOLO OwnerMSP OR OrdinaryMSP possono creare una nuova segnalazione
+	creatorBytes, err := stub.GetCreator()
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile recuperare creator: %v", err))
+	}
+
+	creatorMSPID, err := getCreatorMSPID(creatorBytes)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Impossibile estrarre MSP ID: %v", err))
+	}
+
+	if creatorMSPID != "OwnerMSP" && creatorMSPID != "OrdinaryMSP" {
+		return shim.Error(fmt.Sprintf("Accesso negato: solo OwnerMSP AND OrdinaryMSP possono creare una nuova segnalazione (chiamante: %s)", creatorMSPID))
+	}
 
 	timestamp := time.Now().Format(time.RFC3339)
 	alertID := fmt.Sprintf("ALERT_%s_%s", machineID, timestamp)
@@ -531,8 +554,6 @@ func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
 		return s.RegisterMachine(stub, args)
 	case "UpdateOperatingHours":
 		return s.UpdateOperatingHours(stub, args)
-	case "CheckMachineStatus":
-		return s.CheckMachineStatus(stub, args)
 	case "SetMachineStatus":
 		return s.SetMachineStatus(stub, args)
 	case "ReadMachine":

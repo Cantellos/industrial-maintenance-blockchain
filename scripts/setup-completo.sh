@@ -166,7 +166,7 @@ docker-compose up -d || error_exit "Errore avvio container"
 echo "Attesa avvio container..."
 MAX_RETRY=30
 RETRY_COUNT=0
-EXPECTED_CONTAINERS=3
+EXPECTED_CONTAINERS=4
 
 while [ $RETRY_COUNT -lt $MAX_RETRY ]; do
     RUNNING=$(docker ps --filter "label=service=hyperledger-fabric" --format "{{.Names}}" | wc -l)
@@ -189,7 +189,8 @@ fi
 
 wait_for_orderer
 wait_for_peer "peer0.owner.example.com"
-wait_for_peer "peer0.service.example.com"
+wait_for_peer "peer0.ordinary.example.com"
+wait_for_peer "peer0.extraordinary.example.com"
 
 echo -e "${GREEN}[OK] Tutti i container sono healthy${NC}"
 sleep 2
@@ -256,23 +257,38 @@ echo -e "${GREEN}[OK] Peer Owner joinato${NC}"
 sleep 1
 
 # ============================================
-# STEP 7: JOIN PEER SERVICE AL CANALE
+# STEP 7: JOIN PEER ORDINARY E EXTRAORDINARY AL CANALE
 # ============================================
-echo -e "${YELLOW}[7/9] Join peer Service al canale...${NC}"
+echo -e "${YELLOW}[7/9] Join peer Ordinary e Extraordinary al canale...${NC}"
 
-export CORE_PEER_LOCALMSPID="ServiceMSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/service.example.com/users/Admin@service.example.com/msp
+export CORE_PEER_LOCALMSPID="OrdinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/ordinary.example.com/users/Admin@ordinary.example.com/msp
 export CORE_PEER_ADDRESS=localhost:9051
 
-[ ! -f "$CORE_PEER_TLS_ROOTCERT_FILE" ] && error_exit "Service TLS cert non trovato"
-[ ! -d "$CORE_PEER_MSPCONFIGPATH" ] && error_exit "Service MSP path non trovato"
+[ ! -f "$CORE_PEER_TLS_ROOTCERT_FILE" ] && error_exit "Ordinary TLS cert non trovato"
+[ ! -d "$CORE_PEER_MSPCONFIGPATH" ] && error_exit "Ordinary MSP path non trovato"
 
-peer channel join -b ./channel-artifacts/maintenancech.block || error_exit "Errore join peer Service"
+peer channel join -b ./channel-artifacts/maintenancech.block || error_exit "Errore join peer Ordinary"
 
 peer channel list
 
-echo -e "${GREEN}[OK] Peer Service joinato${NC}"
+echo -e "${GREEN}[OK] Peer Ordinary joinato${NC}"
+sleep 1
+
+export CORE_PEER_LOCALMSPID="ExtraordinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/extraordinary.example.com/users/Admin@extraordinary.example.com/msp
+export CORE_PEER_ADDRESS=localhost:11051
+
+[ ! -f "$CORE_PEER_TLS_ROOTCERT_FILE" ] && error_exit "Extraordinary TLS cert non trovato"
+[ ! -d "$CORE_PEER_MSPCONFIGPATH" ] && error_exit "Extraordinary MSP path non trovato"
+
+peer channel join -b ./channel-artifacts/maintenancech.block || error_exit "Errore join peer Extraordinary"
+
+peer channel list
+
+echo -e "${GREEN}[OK] Peer Extraordinary joinato${NC}"
 sleep 1
 
 # ============================================
@@ -291,8 +307,7 @@ cd "$CHAINCODE_DIR"
 rm -f maintenance.tar.gz
 rm -rf vendor/
 
-# FIX CRITICO: Imposta FABRIC_CFG_PATH a NETWORK_DIR prima di eseguire peer package
-# Questo risolve il problema "core.yaml not found"
+# Imposta FABRIC_CFG_PATH a NETWORK_DIR prima di eseguire peer package
 echo "Packaging chaincode..."
 FABRIC_CFG_PATH="$NETWORK_DIR" peer lifecycle chaincode package maintenance.tar.gz \
     --path . \
@@ -309,7 +324,7 @@ echo -e "${GREEN}[OK] Package creato: maintenance.tar.gz${NC}"
 # Torna a network directory
 cd "$NETWORK_DIR"
 
-# Install su OwnerMSP
+# INSTALL SU OWNERMSP
 echo "Install su peer Owner..."
 export CORE_PEER_LOCALMSPID="OwnerMSP"
 export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt
@@ -318,7 +333,7 @@ export CORE_PEER_ADDRESS=localhost:7051
 
 peer lifecycle chaincode install "$CHAINCODE_DIR/maintenance.tar.gz" || error_exit "Errore install chaincode su Owner"
 
-# Salva package ID automaticamente con jq
+# Salva package ID
 export PACKAGE_ID=$(peer lifecycle chaincode queryinstalled --output json | jq -r '.installed_chaincodes[0].package_id')
 
 if [ -z "$PACKAGE_ID" ] || [ "$PACKAGE_ID" = "null" ]; then
@@ -327,16 +342,28 @@ fi
 
 echo -e "${GREEN}[OK] Package ID: $PACKAGE_ID${NC}"
 
-# Install su ServiceMSP
-echo "Install su peer Service..."
-export CORE_PEER_LOCALMSPID="ServiceMSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/service.example.com/users/Admin@service.example.com/msp
+# INSTALL SU ORDINARYMSP
+echo "Install su peer Ordinary..."
+export CORE_PEER_LOCALMSPID="OrdinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/ordinary.example.com/users/Admin@ordinary.example.com/msp
 export CORE_PEER_ADDRESS=localhost:9051
 
-peer lifecycle chaincode install "$CHAINCODE_DIR/maintenance.tar.gz" || error_exit "Errore install chaincode su Service"
+peer lifecycle chaincode install "$CHAINCODE_DIR/maintenance.tar.gz" || error_exit "Errore install chaincode su Ordinary"
 
-# Approve for OwnerMSP
+# INSTALL SU EXTRAORDINARYMSP
+echo "Install su peer Extraordinary..."
+export CORE_PEER_LOCALMSPID="ExtraordinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/extraordinary.example.com/users/Admin@extraordinary.example.com/msp
+export CORE_PEER_ADDRESS=localhost:11051
+
+peer lifecycle chaincode install "$CHAINCODE_DIR/maintenance.tar.gz" || error_exit "Errore install chaincode su Extraordinary"
+
+echo -e "${GREEN}[OK] Chaincode installato su tutti i peer${NC}"
+sleep 1
+
+# APPROVE FOR OWNERMSP
 echo "Approve per Owner..."
 export CORE_PEER_LOCALMSPID="OwnerMSP"
 export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt
@@ -352,13 +379,15 @@ peer lifecycle chaincode approveformyorg \
     --name maintenance \
     --version 1.0 \
     --package-id "$PACKAGE_ID" \
-    --sequence 1 || error_exit "Errore approve Owner"
+    --sequence 1 \
+    --signature-policy "OR('OwnerMSP.peer', AND('OwnerMSP.peer','OrdinaryMSP.peer'), AND('OwnerMSP.peer','ExtraordinaryMSP.peer'))" \
+    || error_exit "Errore approve Owner"
 
-# Approve for ServiceMSP
-echo "Approve per Service..."
-export CORE_PEER_LOCALMSPID="ServiceMSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/service.example.com/users/Admin@service.example.com/msp
+# APPROVE FOR ORDINARYMSP
+echo "Approve per Ordinary..."
+export CORE_PEER_LOCALMSPID="OrdinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/ordinary.example.com/users/Admin@ordinary.example.com/msp
 export CORE_PEER_ADDRESS=localhost:9051
 
 peer lifecycle chaincode approveformyorg \
@@ -370,19 +399,45 @@ peer lifecycle chaincode approveformyorg \
     --name maintenance \
     --version 1.0 \
     --package-id "$PACKAGE_ID" \
-    --sequence 1 || error_exit "Errore approve Service"
+    --sequence 1 \
+    --signature-policy "OR('OwnerMSP.peer', AND('OwnerMSP.peer','OrdinaryMSP.peer'), AND('OwnerMSP.peer','ExtraordinaryMSP.peer'))" \
+    || error_exit "Errore approve Ordinary"
 
-# Check commit readiness
+# APPROVE FOR EXTRAORDINARYMSP
+echo "Approve per Extraordinary..."
+export CORE_PEER_LOCALMSPID="ExtraordinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/extraordinary.example.com/users/Admin@extraordinary.example.com/msp
+export CORE_PEER_ADDRESS=localhost:11051
+
+peer lifecycle chaincode approveformyorg \
+    -o localhost:7050 \
+    --ordererTLSHostnameOverride orderer.example.com \
+    --tls \
+    --cafile "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+    --channelID maintenancech \
+    --name maintenance \
+    --version 1.0 \
+    --package-id "$PACKAGE_ID" \
+    --sequence 1 \
+    --signature-policy "OR('OwnerMSP.peer', AND('OwnerMSP.peer','OrdinaryMSP.peer'), AND('OwnerMSP.peer','ExtraordinaryMSP.peer'))" \
+    || error_exit "Errore approve Extraordinary"
+
+echo -e "${GREEN}[OK] Chaincode approvato da tutte le organizzazioni${NC}"
+sleep 1
+
+# CHECK COMMIT READINESS
 echo "Verifica commit readiness..."
 peer lifecycle chaincode checkcommitreadiness \
     --channelID maintenancech \
     --name maintenance \
     --version 1.0 \
     --sequence 1 \
+    --signature-policy "OR('OwnerMSP.peer', AND('OwnerMSP.peer','OrdinaryMSP.peer'), AND('OwnerMSP.peer','ExtraordinaryMSP.peer'))" \
     --output json
 
-# Commit chaincode
-echo "Commit chaincode..."
+# COMMIT CHAINCODE
+echo "Commit chaincode con politica endorsement personalizzata..."
 peer lifecycle chaincode commit \
     -o localhost:7050 \
     --ordererTLSHostnameOverride orderer.example.com \
@@ -392,12 +447,16 @@ peer lifecycle chaincode commit \
     --name maintenance \
     --version 1.0 \
     --sequence 1 \
+    --signature-policy "OR('OwnerMSP.peer', AND('OwnerMSP.peer','OrdinaryMSP.peer'), AND('OwnerMSP.peer','ExtraordinaryMSP.peer'))" \
     --peerAddresses localhost:7051 \
     --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt" \
     --peerAddresses localhost:9051 \
-    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt" || error_exit "Errore commit chaincode"
+    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt" \
+    --peerAddresses localhost:11051 \
+    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt" \
+    || error_exit "Errore commit chaincode"
 
-echo -e "${GREEN}[OK] Chaincode deployed${NC}"
+echo -e "${GREEN}[OK] Chaincode deployed con policy: OR(Owner) OR AND(Owner+Ordinary) OR AND(Owner+Extraordinary)${NC}"
 sleep 2
 
 # ============================================
@@ -415,7 +474,7 @@ peer chaincode invoke \
     --peerAddresses localhost:7051 \
     --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt" \
     --peerAddresses localhost:9051 \
-    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt" \
+    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt" \
     -c '{"function":"InitLedger","Args":[]}' || error_exit "Errore inizializzazione ledger"
 
 echo -e "${GREEN}[OK] Ledger inizializzato${NC}"

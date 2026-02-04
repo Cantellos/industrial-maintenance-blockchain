@@ -67,7 +67,7 @@ if [ $? -ne 0 ]; then
 fi
 
 NUM_MACHINES=$(echo "$MACHINES" | jq 'length')
-echo -e "${GREEN}Trovate $NUM_MACHINES macchine${NC}"
+echo -e "${YELLOW}Trovate $NUM_MACHINES macchine${NC}"
 echo ""
 
 # ============================================
@@ -91,7 +91,7 @@ for i in $(seq 0 $((NUM_MACHINES - 1))); do
     # Salta macchine guaste e crea alert
     # ============================================
     if [ "$STATUS" = "guasto" ]; then
-        echo -e "${YELLOW}  Macchina in guasto, nessun aggiornamento${NC}"
+        echo -e "${YELLOW}  Macchina in guasto, nessun aggiornamento ore${NC}"
         
         ALERT_MSG="Macchina $MACHINE_NAME in stato GUASTO - richiede intervento straordinario"
         
@@ -115,12 +115,10 @@ for i in $(seq 0 $((NUM_MACHINES - 1))); do
         -C maintenancech -n maintenance \
         --peerAddresses localhost:7051 \
         --tlsRootCertFiles $NETWORK_DIR/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt \
-        --peerAddresses localhost:9051 \
-        --tlsRootCertFiles $NETWORK_DIR/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt \
         -c "{\"function\":\"UpdateOperatingHours\",\"Args\":[\"$MACHINE_ID\",\"$DAILY_HOURS\"]}" 2>&1)
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Ore aggiornate con successo${NC}"
+        echo -e "${GREEN}  Ore aggiornate con successo${NC}"
         
         # Ore dopo aggiornamento
         HOURS_AFTER=$((HOURS_BEFORE + DAILY_HOURS))

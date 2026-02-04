@@ -93,12 +93,10 @@ RESULT=$(peer chaincode invoke \
     -n maintenance \
     --peerAddresses localhost:7051 \
     --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt" \
-    --peerAddresses localhost:9051 \
-    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt" \
     -c "{\"function\":\"RegisterMachine\",\"Args\":[\"$MACHINE_ID\",\"$MACHINE_NAME\",\"$MACHINE_MODEL\",\"$OPERATING_HOURS\",\"$STATUS\",$(echo "$INTERVENTIONS_JSON" | jq -R)]}" 2>&1)
 
 INVOKE_STATUS=$?
-# Mostra solo eventuali errori
+# Mostra eventuali errori
 if [ $INVOKE_STATUS -ne 0 ]; then
     echo "$RESULT"
 fi

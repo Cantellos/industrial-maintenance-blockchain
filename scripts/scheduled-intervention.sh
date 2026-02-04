@@ -85,7 +85,6 @@ esac
 echo -e "${YELLOW}Configurazione:${NC}"
 echo "  Intervallo: $DESCRIPTION"
 echo "  Cron:       $CRON_SCHEDULE"
-echo "  Log:        $CRON_LOG"
 echo ""
 
 # ============================================
@@ -163,8 +162,8 @@ for MACHINE_ID in $MACHINE_IDS; do
     
     ./add-ordinary-intervention.sh \
         "$MACHINE_ID" \
-        "Manutenzione ordinaria programmata automatica - $TIMESTAMP" \
-        "Tecnico ServiceMSP - Team Manutenzione" \
+        "Manutenzione ordinaria programmata" \
+        "Tecnico OrdinaryMSP - Team Manutenzione" \
         >> "$LOG_FILE" 2>&1
     
     if [ $? -eq 0 ]; then
@@ -182,14 +181,12 @@ EOF
 
 chmod +x "$WRAPPER_SCRIPT"
 
-echo -e "${GREEN}Script wrapper creato: $WRAPPER_SCRIPT${NC}"
+echo -e "${GREEN}Script wrapper creato: cron-scheduled-intervention.sh${NC}"
 echo ""
 
 # ============================================
 # CONFIGURAZIONE CRONTAB
 # ============================================
-echo -e "${BLUE}Configurazione crontab...${NC}"
-
 # Riga da aggiungere al crontab
 CRON_JOB="$CRON_SCHEDULE $WRAPPER_SCRIPT >> $CRON_LOG 2>&1"
 
@@ -215,38 +212,9 @@ fi
 
 echo -e "${GREEN}Cron job configurato con successo${NC}"
 echo ""
-
-# ============================================
-# VERIFICA CONFIGURAZIONE
-# ============================================
-echo -e "${BLUE}Verifica configurazione${NC}"
-echo ""
-
-echo -e "${MAGENTA}Prossime esecuzioni (prossimi 5 trigger):${NC}"
-# Mostra prossime 5 esecuzioni
-for i in {1..5}; do
-    # Calcola prossima esecuzione (approssimativo)
-    case "$UNIT" in
-        minutes|minute)
-            NEXT=$(date -d "+$((i*INTERVAL)) minutes" '+%Y-%m-%d %H:%M')
-            ;;
-        hours|hour)
-            NEXT=$(date -d "+$((i*INTERVAL)) hours" '+%Y-%m-%d %H:%M')
-            ;;
-        days|day)
-            NEXT=$(date -d "+$((i*INTERVAL)) days" '+%Y-%m-%d 02:00')
-            ;;
-        weeks|week)
-            NEXT=$(date -d "+$((i*INTERVAL)) weeks" '+%Y-%m-%d 02:00')
-            ;;
-    esac
-    echo "  $i) $NEXT"
-done
-echo ""
-
 echo -e "${GREEN}Configurazione intervention completata${NC}"
 echo ""
-echo "  - Log salvati in: $CRON_LOG"
+echo "  - Log: $CRON_LOG"
 echo "  - Per disabilitare i trigger: crontab -e"
 echo "  - Per visualizzare i trigger: crontab -l"
 echo ""

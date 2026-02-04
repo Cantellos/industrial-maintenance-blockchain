@@ -4,7 +4,8 @@
 volumes:
   orderer.example.com:
   peer0.owner.example.com:
-  peer0.service.example.com:
+  peer0.ordinary.example.com:
+  peer0.extraordinary.example.com:
 
 # ========================================
 # NETWORK PRIVATA
@@ -22,7 +23,7 @@ services:
   # =====================================
   orderer.example.com:
     container_name: orderer.example.com
-    image: hyperledger/fabric-orderer:2.4
+    image: hyperledger/fabric-orderer:2.5
     labels:
       service: hyperledger-fabric
     environment:
@@ -66,7 +67,7 @@ services:
   # =====================================
   peer0.owner.example.com:
     container_name: peer0.owner.example.com
-    image: hyperledger/fabric-peer:2.4
+    image: hyperledger/fabric-peer:2.5
     labels:
       service: hyperledger-fabric
     environment:
@@ -103,23 +104,23 @@ services:
       - maintenance
 
   # =====================================
-  # PEER SERVICE (Manutenzione)
+  # PEER ORDINARY SERVICE
   # =====================================
-  peer0.service.example.com:
-    container_name: peer0.service.example.com
-    image: hyperledger/fabric-peer:2.4
+  peer0.ordinary.example.com:
+    container_name: peer0.ordinary.example.com
+    image: hyperledger/fabric-peer:2.5
     labels:
       service: hyperledger-fabric
     environment:
       - FABRIC_LOGGING_SPEC=INFO
-      - CORE_PEER_ID=peer0.service.example.com
-      - CORE_PEER_ADDRESS=peer0.service.example.com:9051
+      - CORE_PEER_ID=peer0.ordinary.example.com
+      - CORE_PEER_ADDRESS=peer0.ordinary.example.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.service.example.com:9052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.ordinary.example.com:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.service.example.com:9051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.service.example.com:9051
-      - CORE_PEER_LOCALMSPID=ServiceMSP
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.ordinary.example.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.ordinary.example.com:9051
+      - CORE_PEER_LOCALMSPID=OrdinaryMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_PEER_TLS_ENABLED=true
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
@@ -128,17 +129,58 @@ services:
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_maintenance
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.service.example.com:9445
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.ordinary.example.com:9445
       - CORE_METRICS_PROVIDER=prometheus
     working_dir: /root
     command: peer node start
     volumes:
-      - ./organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/msp:/etc/hyperledger/fabric/msp
-      - ./organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls:/etc/hyperledger/fabric/tls
-      - peer0.service.example.com:/var/hyperledger/production
+      - ./organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.ordinary.example.com:/var/hyperledger/production
       - /var/run/docker.sock:/host/var/run/docker.sock
     ports:
       - "9051:9051"
       - "9445:9445"
+    networks:
+      - maintenance
+
+  # =====================================
+  # PEER EXTRAORDINARY SERVICE
+  # =====================================
+  peer0.extraordinary.example.com:
+    container_name: peer0.extraordinary.example.com
+    image: hyperledger/fabric-peer:2.5
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=peer0.extraordinary.example.com
+      - CORE_PEER_ADDRESS=peer0.extraordinary.example.com:11051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:11051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.extraordinary.example.com:11052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:11052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.extraordinary.example.com:11051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.extraordinary.example.com:11051
+      - CORE_PEER_LOCALMSPID=ExtraordinaryMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_maintenance
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.extraordinary.example.com:9446
+      - CORE_METRICS_PROVIDER=prometheus
+    volumes:
+      - ./organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.extraordinary.example.com:/var/hyperledger/production
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 11051:11051
+      - 9446:9446
     networks:
       - maintenance

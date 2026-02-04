@@ -58,9 +58,11 @@ create_alert() {
         --peerAddresses localhost:7051 \
         --tlsRootCertFiles $NETWORK_DIR/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt \
         --peerAddresses localhost:9051 \
-        --tlsRootCertFiles $NETWORK_DIR/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt \
+        --tlsRootCertFiles $NETWORK_DIR/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt \
+        --peerAddresses localhost:11051 \
+        --tlsRootCertFiles $NETWORK_DIR/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt \
         -c "{\"function\":\"CreateAlert\",\"Args\":[\"$MACHINE_ID\",\"$MACHINE_NAME\",\"$ALERT_TYPE\",\"$MESSAGE\"]}" 2>&1)
-    
+        
     # Ritorna alla directory originale
     cd "$ORIGINAL_DIR"
     

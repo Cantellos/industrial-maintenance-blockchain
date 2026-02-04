@@ -22,10 +22,10 @@ cd ~/fabric-projects/fabric-maintenance-network/network
 # SETUP AMBIENTE
 # ============================================
 export CORE_PEER_TLS_ENABLED=true
-export CORE_PEER_LOCALMSPID="OwnerMSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/owner.example.com/users/Admin@owner.example.com/msp
-export CORE_PEER_ADDRESS=localhost:7051
+export CORE_PEER_LOCALMSPID="ExtraordinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/extraordinary.example.com/users/Admin@extraordinary.example.com/msp
+export CORE_PEER_ADDRESS=localhost:11051
 export ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 
 # ============================================
@@ -85,10 +85,10 @@ RESULT=$(peer chaincode invoke \
     -n maintenance \
     --peerAddresses localhost:7051 \
     --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt" \
-    --peerAddresses localhost:9051 \
-    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt" \
+    --peerAddresses localhost:11051 \
+    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/extraordinary.example.com/peers/peer0.extraordinary.example.com/tls/ca.crt" \
     -c "{\"function\":\"AddIntervention\",\"Args\":[\"$MACHINE_ID\",\"$INTERVENTION_TYPE\",\"$DESCRIPTION\",\"$TECHNICIAN\"]}" 2>&1)
-
+    
 INVOKE_STATUS=$?
 if [ $INVOKE_STATUS -ne 0 ]; then
     echo -e "${RED}[ERRORE] Registrazione fallita${NC}"

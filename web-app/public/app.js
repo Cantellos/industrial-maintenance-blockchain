@@ -163,7 +163,6 @@ function createInterventionCard(intervention) {
             <div class="intervention-details">
                 <strong>Descrizione:</strong> ${intervention.description}<br>
                 <strong>Tecnico:</strong> ${intervention.technician}<br>
-                <strong>Approvato da:</strong> ${intervention.approvedBy}
             </div>
         </div>
     `;
@@ -280,7 +279,6 @@ function collectInterventions() {
             type: item.querySelector('.intervention-type-select').value,
             description: item.querySelector('.intervention-description').value.trim(),
             technician: item.querySelector('.intervention-technician').value.trim(),
-            approvedBy: 'OwnerMSP'
         };
         
         // Aggiungi solo se ha almeno descrizione o tecnico

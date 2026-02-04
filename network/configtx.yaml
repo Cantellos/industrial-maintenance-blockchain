@@ -37,23 +37,41 @@ Organizations:
           Type: Signature
           Rule: "OR('OwnerMSP.peer')"
 
-  - &ServiceOrg
-      Name: ServiceMSP
-      ID: ServiceMSP
-      MSPDir: ./organizations/peerOrganizations/service.example.com/msp
+  - &OrdinaryOrg
+      Name: OrdinaryMSP
+      ID: OrdinaryMSP
+      MSPDir: ./organizations/peerOrganizations/ordinary.example.com/msp
       Policies:
         Readers:
           Type: Signature
-          Rule: "OR('ServiceMSP.admin', 'ServiceMSP.peer', 'ServiceMSP.client')"
+          Rule: "OR('OrdinaryMSP.admin', 'OrdinaryMSP.peer', 'OrdinaryMSP.client')"
         Writers:
           Type: Signature
-          Rule: "OR('ServiceMSP.admin', 'ServiceMSP.client')"
+          Rule: "OR('OrdinaryMSP.admin', 'OrdinaryMSP.client')"
         Admins:
           Type: Signature
-          Rule: "OR('ServiceMSP.admin')"
+          Rule: "OR('OrdinaryMSP.admin')"
         Endorsement:
           Type: Signature
-          Rule: "OR('ServiceMSP.peer')"
+          Rule: "OR('OrdinaryMSP.peer')"
+
+  - &ExtraordinaryOrg
+    Name: ExtraordinaryMSP
+    ID: ExtraordinaryMSP
+    MSPDir: ./organizations/peerOrganizations/extraordinary.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ExtraordinaryMSP.admin', 'ExtraordinaryMSP.peer', 'ExtraordinaryMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ExtraordinaryMSP.admin', 'ExtraordinaryMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ExtraordinaryMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ExtraordinaryMSP.peer')"
 
 # ========================================
 # CAPABILITIES (Fabric 2.4)
@@ -167,6 +185,7 @@ Profiles:
       <<: *ApplicationDefaults
       Organizations:
         - *OwnerOrg
-        - *ServiceOrg
+        - *OrdinaryOrg
+        - *ExtraordinaryOrg
       Capabilities:
         <<: *ApplicationCapabilities

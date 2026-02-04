@@ -2,7 +2,7 @@
   "name": "maintenance-network",
   "version": "1.0.0",
   "client": {
-    "organization": "Owner",
+    "organization": "Extraordinary",
     "connection": {
       "timeout": {
         "peer": {

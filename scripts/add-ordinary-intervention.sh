@@ -24,17 +24,17 @@ cd ~/fabric-projects/fabric-maintenance-network/network
 # SETUP AMBIENTE
 # ============================================
 export CORE_PEER_TLS_ENABLED=true
-export CORE_PEER_LOCALMSPID="OwnerMSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/owner.example.com/users/Admin@owner.example.com/msp
-export CORE_PEER_ADDRESS=localhost:7051
+export CORE_PEER_LOCALMSPID="OrdinaryMSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/ordinary.example.com/users/Admin@ordinary.example.com/msp
+export CORE_PEER_ADDRESS=localhost:9051
 export ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 
 # ============================================
 # PARAMETRI INTERVENTO CONFIGURABILI
 # ============================================
 MACHINE_ID="${1:-MACH001}"
-DESCRIPTION="${2:-Manutenzione ordinaria programmata - controllo generale}"
+DESCRIPTION="${2:-Manutenzione ordinaria programmata}"
 TECHNICIAN="${3:-Tecnico ServiceMSP - Mario Rossi}"
 INTERVENTION_TYPE="ordinaria"
 
@@ -85,7 +85,7 @@ RESULT=$(peer chaincode invoke \
     --peerAddresses localhost:7051 \
     --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt" \
     --peerAddresses localhost:9051 \
-    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt" \
+    --tlsRootCertFiles "${PWD}/organizations/peerOrganizations/ordinary.example.com/peers/peer0.ordinary.example.com/tls/ca.crt" \
     -c "{\"function\":\"AddIntervention\",\"Args\":[\"$MACHINE_ID\",\"$INTERVENTION_TYPE\",\"$DESCRIPTION\",\"$TECHNICIAN\"]}" 2>&1)
 
 INVOKE_STATUS=$?

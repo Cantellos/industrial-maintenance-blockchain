@@ -99,10 +99,8 @@ peer chaincode invoke \
     -n maintenance \
     --peerAddresses localhost:7051 \
     --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/owner.example.com/peers/peer0.owner.example.com/tls/ca.crt \
-    --peerAddresses localhost:9051 \
-    --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/service.example.com/peers/peer0.service.example.com/tls/ca.crt \
     -c "{\"function\":\"SetMachineStatus\",\"Args\":[\"$MACHINE_ID\",\"$NEW_STATUS\"]}" 2>&1 | grep -v "Chaincode invoke successful" || true
-
+    
 echo -e "${GREEN}Stato aggiornato correttamente${NC}"
 echo ""
 
@@ -116,7 +114,6 @@ if [ "$NEW_STATUS" = "guasto" ]; then
     
     create_alert "$MACHINE_ID" "$MACHINE_NAME" "guasto_segnalato" "$ALERT_MSG" > /dev/null
     
-    echo ""
     echo -e "${GREEN}Segnalazione creata con successo${NC}"
     echo ""
 fi
